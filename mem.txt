@@ -1,0 +1,81 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
+#include "mymalloc.h"
+
+int *testArray;
+// length can be changed to a million
+int length = 000000;
+int makePositive(int start, int end)
+{
+    if ((end - start) < 0)
+        end += 1000000;
+
+    return end;
+}
+double test()
+{
+    struct timeval start, end;
+
+    int counter = 0;
+
+    gettimeofday(&start, NULL);
+    int returningStart = start.tv_usec;
+    time_t t;
+    srand((unsigned)time(&t));
+    while (counter++ < length)
+    {
+
+        // call mymalloc, myfree, or myrealloc
+        int method = (rand() % 3);
+        // how big each call should be
+        int randSize = (rand() % 256);
+        if (method == 0)
+        {
+            testArray = mymalloc(randSize);
+        }
+        else if (method == 1)
+        {
+            myfree(testArray);
+        }
+        else if (method == 2)
+        {
+            testArray = myrealloc(testArray, randSize);
+        }
+    }
+    gettimeofday(&end, NULL);
+
+    double returningEnd = end.tv_usec;
+
+    returningEnd = makePositive(returningStart, returningEnd);
+    return (returningEnd - returningStart) / (double)(1000);
+}
+
+double calc(int operations, double time)
+{
+    return operations / time;
+}
+
+int main()
+{
+    // all calls and tests for all methods
+    myinit(0);
+    double first = calc((double)length, test());
+    double util1 = utilization();
+    mycleanup();
+    myinit(1);
+    double next = calc((double)length, test());
+    double util2 = utilization();
+    mycleanup();
+    myinit(2);
+    double best = calc((double)length, test());
+    double util3 = utilization();
+    mycleanup();
+    printf("\nFirst fit throughput: %f ops/sec\n", first);
+    printf("Firt fit utilization: %lf\n", util1);
+    printf("Next fit throughput: %f ops/sec\n", next);
+    printf("Next fit utilization: %.2lf \n", util2);
+    printf("Best fit throughput: %f ops/sec\n", best);
+    printf("Best fit utilization: %.2lf \n", util3);
+}
